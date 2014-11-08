@@ -3,6 +3,7 @@ import json
 from flask import Flask
 from flask import request
 from pymongo import MongoClient
+from flask import render_template
 
 
 WORK_DB = 'test'
@@ -15,7 +16,11 @@ collection = db[WORK_COLLECTION]
 
 # TODO: for all the methods here, add exception handling logic!
 
-@app.route("/api/v1/trucks")
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/api/v1/trucks')
 def trucks_list():
     trucks = []
     cursor = collection.find()
@@ -24,7 +29,7 @@ def trucks_list():
         trucks.append(truck)
     return json.dumps(trucks)
 
-@app.route("/api/v1/trucks/nearby")
+@app.route('/api/v1/trucks/nearby')
 def nearby_trucks_list():
     maxDistance = float(request.args.get('maxDistance'))
     log = float(request.args.get('log'))
