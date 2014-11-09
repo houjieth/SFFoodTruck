@@ -1,3 +1,5 @@
+// TODO: 将不同的backbone class定义放到不同的文件中
+
 var App = {};
 
 App.Truck = Backbone.GoogleMaps.Location.extend({
@@ -13,8 +15,9 @@ App.TruckCollection = Backbone.GoogleMaps.LocationCollection.extend({
 //});
 
 App.InfoWindow = Backbone.View.extend({
+    template: '#info-window-template',
     render: function() {
-        var template = _.template($('#infoWindow-template').html());
+        var template = _.template($(this.template).html());
         this.$el.html(template({
             name: this.model.get('name'),
             address: this.model.get('address'),
@@ -86,7 +89,8 @@ App.init = function () {
         }
     });
 
-
+    new App.SearchControlView({el: $('#search-area') });
+    this.queryResult = new App.QueryResultList();
 
     /*
     // Render Markers
@@ -126,7 +130,8 @@ App.createMarkerMap = function(trucks) {
         var marker = new google.maps.Marker({
             position: new google.maps.LatLng(truck.get('lat'), truck.get('lng')),
             title: 'Truck Marker',
-            icon: '/static/assets/truck_small.png'
+            icon: '/static/assets/truck_small.png',
+            animation: google.maps.Animation.DROP
         });
         var infoWindow = new google.maps.InfoWindow({
             content: new App.InfoWindow({ model: truck }).render().el
@@ -146,16 +151,16 @@ App.createMarkerMap = function(trucks) {
 };
 
 App.setupMarkers = function() {
-    var mgr = new MarkerManager(this.map);
+    this.markerManager = new MarkerManager(this.map);
     var that = this;
-    google.maps.event.addListener(mgr, 'loaded', function () {
-        mgr.addMarkers(that.getMarkers(2), 12);
-        mgr.addMarkers(that.getMarkers(45), 13);
-        mgr.addMarkers(that.getMarkers(90), 14);
-        mgr.addMarkers(that.getMarkers(180), 15);
-        mgr.addMarkers(that.getMarkers(360), 16);
-        mgr.addMarkers(that.getMarkers(720), 17);
-        mgr.refresh();
+    google.maps.event.addListener(this.markerManager, 'loaded', function () {
+        that.markerManager.addMarkers(that.getMarkers(2), 12);
+        that.markerManager.addMarkers(that.getMarkers(45), 13);
+        that.markerManager.addMarkers(that.getMarkers(90), 14);
+        that.markerManager.addMarkers(that.getMarkers(180), 15);
+        that.markerManager.addMarkers(that.getMarkers(360), 16);
+        that.markerManager.addMarkers(that.getMarkers(720), 17);
+        that.markerManager.refresh();
     });
 };
 
@@ -163,7 +168,6 @@ App.getMarkers = function(n) {
     var batch = [];
     maxSize = Object.keys(this.markerMap).length;
     n = n <= maxSize ? n : maxSize;
-    console.log(n);
     var locationIds = this.getRandomK(Object.keys(this.markerMap), n);
     for (var i = 0; i < n; i++) {
         //var tmpIcon = getWeatherIcon();
@@ -186,14 +190,133 @@ App.getRandomK = function(array, k) {
     return ret;
 };
 
+App.SearchControlView = Backbone.View.extend({
+    events: {
+        'change #address-input': 'startSearchWithAddress'
+    },
 
+    startSearchWithAddress: function(e) {
+        var address = $(e.currentTarget).val();
+        App.queryResult.queryWithAddress(address);
+    }
+});
 
-/**
- * List view
- */
+App.Query = Backbone.Model.extend({
+    maxDistance: 500, // TODO: make this dynamic!
+    toQueryString: function() {
+        return "?lat=" + this.get('lat') + "&lng=" + this.get('lng') + "&maxDistance=" + this.maxDistance;
+    }
+});
+
+App.QueryResultItem = Backbone.Model.extend({
+
+});
+
+App.QueryResultList = Backbone.Collection.extend({
+    urlBase: '/api/v1/trucks/nearby',
+    model: App.QueryResultItem,
+    addressSuffix: " San Francisco, CA",
+
+    initialize: function() {
+        this.geocoder = new google.maps.Geocoder();
+    },
+
+    queryWithAddress: function(address) {
+        address += this.addressSuffix;
+        var that = this;
+        this.geocoder.geocode( {'address': address}, function(results, status) {
+            if (status == google.maps.GeocoderStatus.OK) {
+                //map.setCenter(results[0].geometry.location);
+                //var marker = new google.maps.Marker({
+                //    map: map,
+                //    position: results[0].geometry.location
+                //});
+                that.loc = results[0].geometry.location;
+                var lat = that.loc.lat();
+                var lng = that.loc.lng();
+                console.log(that.loc);
+                var query = new App.Query({
+                    lat: lat,
+                    lng: lng
+                });
+                that.url = that.urlBase + query.toQueryString();
+                console.log(that.url);
+                that.fetch({
+                    success: function(queryResult, response, options) {
+                        that.updateMarkers();
+                        that.displayQueryMarker();
+                        that.updateResultListView();
+                        App.map.setCenter(that.loc);
+                        App.map.setZoom(16); // TODO: make this dynamic
+                    }
+                });
+            } else {
+                alert("Geocode was not successful for the following reason: " + status);
+            }
+        });
+    },
+
+    displayQueryMarker: function() {
+        App.markerManager.addMarker(
+            new google.maps.Marker({
+                position: this.loc,
+                title: 'Query Marker',
+                animation: google.maps.Animation.DROP
+            })
+        , 13);
+    },
+
+    updateMarkers: function() {
+        App.markerManager.clearMarkers();
+        for(var i = 0; i < App.queryResult.size(); i++) {
+            var result = App.queryResult.at(i);
+            var locationId = result.get('location_id');
+            App.markerManager.addMarker(App.markerMap[locationId], 13);
+        }
+    },
+
+    updateResultListView: function() {
+        var resultListView = new App.QueryResultListView();
+        resultListView.render();
+    }
+});
+
+App.QueryResultItemView = Backbone.View.extend({
+    template: '#search-result-template',
+
+    render: function() {
+        var template = _.template($(this.template).html());
+        this.$el.html(template({
+            name: this.model.get('name'),
+            address: this.model.get('address'),
+            food_items_str: this.model.get('food_items_str')
+        }));
+        console.log(this.el);
+        return this;
+    }
+});
+
+App.QueryResultListView = Backbone.View.extend({
+    render: function() {
+        $('#search-result-area > div').html("");
+        for (var i = 0; i < App.queryResult.size(); i++) {
+            var locationId = App.queryResult.at(i).get('location_id');
+            var truck = App.trucks.findWhere({
+                location_id: locationId
+            });
+            var resultItemView = new App.QueryResultItemView({
+                model: truck
+            });
+            resultItemView.render();
+            console.log(resultItemView.el);
+            $('#search-result-area > div').append(resultItemView.$el.html());
+        }
+    }
+});
+
 /*
 App.ItemView = Backbone.View.extend({
-    template: '<%=title %>',
+    template: '#search-result-template',
     tagName: 'li',
 
     events: {
@@ -207,10 +330,13 @@ App.ItemView = Backbone.View.extend({
         this.model.on("remove", this.close, this);
     },
 
-    render: function () {
-        var html = _.template(this.template, this.model.toJSON());
-        this.$el.html(html);
-
+    render: function() {
+        var template = _.template($(this.template).html());
+        this.$el.html(template({
+            name: this.model.get('name'),
+            address: this.model.get('address'),
+            food_items_str: this.model.get('food_items_str')
+        }));
         return this;
     },
 
@@ -219,14 +345,18 @@ App.ItemView = Backbone.View.extend({
     },
 
     selectItem: function () {
-        this.model.select();
+        alert("select");
+        //this.model.select();
     },
 
     deselectItem: function () {
-        this.model.deselect();
+        alert("deselect");
+        //this.model.deselect();
     }
 });
+*/
 
+/*
 App.ListView = Backbone.View.extend({
     tagName: 'ul',
     className: 'overlay',

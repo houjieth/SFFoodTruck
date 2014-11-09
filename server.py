@@ -20,6 +20,10 @@ collection = db[WORK_COLLECTION]
 def index():
     return render_template('index.html')
 
+@app.route('/test')
+def test():
+    return render_template('test.html')
+
 @app.route('/api/v1/trucks')
 def trucks_list():
     trucks = []
@@ -32,19 +36,20 @@ def trucks_list():
 @app.route('/api/v1/trucks/nearby')
 def nearby_trucks_list():
     maxDistance = float(request.args.get('maxDistance'))
-    log = float(request.args.get('log'))
+    lng = float(request.args.get('lng'))
     lat = float(request.args.get('lat'))
     trucks = []
     cursor = collection.find({'loc':
                                   {'$near':
                                        {'$geometry':
                                             {'type': 'Point',
-                                             'coordinates': [log, lat]},
+                                             'coordinates': [lng, lat]},
                                         '$maxDistance': maxDistance
                                        }}})
     for truck in cursor:
-        del(truck['_id']) # no need to expose internal id
-        trucks.append(truck)
+        trucks.append({
+            'location_id': truck['location_id']
+        })
     return json.dumps(trucks)
 
 if __name__ == "__main__":

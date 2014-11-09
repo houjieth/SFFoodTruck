@@ -23,6 +23,15 @@ body {
 #search-area {
     right: 40px;
     top: 40px;
+    width: 350px;
+}
+
+#search-result-area {
+    right: 40px;
+    top: 140px;
+    width: 350px;
+    height: 500px;
+    overflow: scroll;
 }
 
 #listing {

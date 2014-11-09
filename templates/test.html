@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?&sensor=false"></script>
+    <script type="text/javascript" src="/static/js/lib/jquery-2.0.3.js"></script>
+    <script type="text/javascript" src="/static/js/lib/underscore.js"></script>
+    <script type="text/javascript" src="/static/js/lib/backbone.js"></script>
+    <script type="text/javascript" src="/static/js/lib/backbone.googlemaps.js"></script>
+    <script type="text/javascript" src="/static/js/lib/markermanager.js"></script>
+    <script type="text/javascript" src="/static/js/lib/bootstrap.js"></script>
+    <script type="text/javascript" src="/static/js/app.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/css/lib/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/app.css">
+</head>
+<body>
+
+<script type="text/template" id="search_template">
+    <!-- Access template variables with <%= %> -->
+    <label><%= search_label %></label>
+    <input type="text" id="search_input" />
+    <input type="button" id="search_button" value="Search" />
+</script>
+
+
+
+<div id="search_container"></div>
+
+<script type="text/javascript">
+     SearchView = Backbone.View.extend({
+        initialize: function(){
+            this.render();
+        },
+        render: function(){
+            //Pass variables in using Underscore.js Template
+            var variables = { search_label: "My Search" };
+            // Compile the template using underscore
+            var template = _.template( $("#search_template").html(), variables );
+            // Load the compiled HTML into the Backbone "el"
+            this.$el.html( template );
+        },
+        events: {
+            "click input[type=button]": "doSearch"
+        },
+        doSearch: function( event ){
+            // Button clicked, you can access the element that was clicked with event.currentTarget
+            alert( "Search for " + $("#search_input").val() );
+        }
+    });
+
+    var search_view = new SearchView({ el: $("#search_container") });
+</script>
+
+</body>
+</html>
