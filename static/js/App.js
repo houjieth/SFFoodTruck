@@ -202,7 +202,7 @@ App.SearchControlView = Backbone.View.extend({
 });
 
 App.Query = Backbone.Model.extend({
-    maxDistance: 500, // TODO: make this dynamic!
+    maxDistance: 400, // TODO: make this dynamic!
     toQueryString: function() {
         return "?lat=" + this.get('lat') + "&lng=" + this.get('lng') + "&maxDistance=" + this.maxDistance;
     }
@@ -247,7 +247,7 @@ App.QueryResultList = Backbone.Collection.extend({
                         that.displayQueryMarker();
                         that.updateResultListView();
                         App.map.setCenter(that.loc);
-                        App.map.setZoom(16); // TODO: make this dynamic
+                        App.map.setZoom(17); // TODO: make this dynamic
                     }
                 });
             } else {
@@ -276,7 +276,9 @@ App.QueryResultList = Backbone.Collection.extend({
     },
 
     updateResultListView: function() {
-        var resultListView = new App.QueryResultListView();
+        var resultListView = new App.QueryResultListView({
+            el: $('#search-result-area')
+        });
         resultListView.render();
     }
 });
@@ -284,32 +286,46 @@ App.QueryResultList = Backbone.Collection.extend({
 App.QueryResultItemView = Backbone.View.extend({
     template: '#search-result-template',
 
+    events: {
+        'mouseenter': 'simulateMarkerClick'
+    },
+
+    simulateMarkerClick: function() {
+        var locationId = this.model.get('location_id');
+        var marker = App.markerMap[locationId];
+        google.maps.event.trigger(marker, 'click');
+    },
+
     render: function() {
         var template = _.template($(this.template).html());
         this.$el.html(template({
+            location_id: this.model.get('location_id'),
             name: this.model.get('name'),
             address: this.model.get('address'),
             food_items_str: this.model.get('food_items_str')
         }));
-        console.log(this.el);
         return this;
     }
 });
 
 App.QueryResultListView = Backbone.View.extend({
+
     render: function() {
-        $('#search-result-area > div').html("");
+        var resultArea = this.$el.find('div');
+        resultArea.html("");
         for (var i = 0; i < App.queryResult.size(); i++) {
             var locationId = App.queryResult.at(i).get('location_id');
             var truck = App.trucks.findWhere({
                 location_id: locationId
             });
+            var childDivId = "search-result-" + locationId;
+            resultArea.append('<div id="' + childDivId + '"></div>');
+            var childDivArea = resultArea.find('#' + childDivId);
             var resultItemView = new App.QueryResultItemView({
-                model: truck
+                model: truck,
+                el: childDivArea
             });
             resultItemView.render();
-            console.log(resultItemView.el);
-            $('#search-result-area > div').append(resultItemView.$el.html());
         }
     }
 });
