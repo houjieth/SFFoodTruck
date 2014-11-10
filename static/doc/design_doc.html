@@ -158,9 +158,11 @@ sup {
 <body>
 <h1>San Francisco Food Truck Finder</h1>
 
-<p>This web app let you find food trucks around a specific location in San Francisco. You can also specify the food type keywords in your search. The app is currently hosted at <a href="http://foodtruck.jiehou.net">foodtruck.jiehou.net</a></p>
+<p>This web app let you find food trucks around a specific location in San Francisco. You can also specify the food type keywords in your search.</p>
 
-<p>This app is basically a single page application using frontend rendering and ajax only. We use Backbone.js, Flask and MongoDB in the technical stack.</p>
+<p>The app is currently hosted at <a href="http://foodtruck.jiehou.net">foodtruck.jiehou.net</a></p>
+
+<p>This app is basically a single page application using frontend rendering and ajax only. We use Backbone.js, Flask and MongoDB in the technical stack. So it's a full-stack product.</p>
 
 <h2>Data Preparation</h2>
 
@@ -175,6 +177,7 @@ sup {
 <ul>
 <li>We are not storing relational data, and we don't need a relational schema for supporting joints and aggregation</li>
 <li>MongoDB provides a good indexing system which allows us to query text and geospatial coordinates efficiently</li>
+<li>We didn't choose MySQL or PostgreSQL because we don't need table joins or complex queries</li>
 </ul>
 
 
@@ -184,7 +187,16 @@ sup {
 
 <h2>Backend Design</h2>
 
-<p>The back end is created using Flask framework, with only three APIs exposed:</p>
+<p>We use Flask for our backend service. We choose Flask becuase:</p>
+
+<ul>
+<li>It's lightweight!</li>
+<li>In this app, we will only need to expose very simple APIs. There's not so much rendering happening in our backend because our frontend handling most of the DOM rendering. So we can focus on providing good APIs for our front to use</li>
+<li>We didn't choose Django because it's too heavy weight and we don't actually need the complex backend rendering and logic inside it</li>
+</ul>
+
+
+<p>The backend provides with only three APIs exposed:</p>
 
 <p>GET <code>/</code></p>
 
@@ -213,7 +225,16 @@ sup {
 
 <h2>Frontend Design</h2>
 
-<p>We use Backbone.js for modeling or truck data and all views. We extensively use Google Maps APIs to visualize the trucks on the map. The main logic is included inside <code>app.js</code></p>
+<p>We use Backbone.js for modeling or truck data and all views becuase:</p>
+
+<ul>
+<li>We don't want to store the data in DOM and we don't want to doing extensive DOM manipulations in the frontend because it's hard to scale our project and painful to write.</li>
+<li>We want to provide good interactive UI where the frontend handling the view changes as the user operates</li>
+<li>We didn't chosse Angular or Ember because it's still a simple app. At this scale, Backbone is good enough to handle the event binding manually where as Angular or Ember is sort of overkilling.</li>
+</ul>
+
+
+<p>We extensively use Google Maps APIs to visualize the trucks on the map. The main logic is included inside <code>app.js</code></p>
 
 <h3>Models</h3>
 

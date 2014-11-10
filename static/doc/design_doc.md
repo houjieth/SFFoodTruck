@@ -1,9 +1,11 @@
 San Francisco Food Truck Finder
 ===============================
 
-This web app let you find food trucks around a specific location in San Francisco. You can also specify the food type keywords in your search. The app is currently hosted at [foodtruck.jiehou.net](http://foodtruck.jiehou.net)
+This web app let you find food trucks around a specific location in San Francisco. You can also specify the food type keywords in your search. 
 
-This app is basically a single page application using frontend rendering and ajax only. We use Backbone.js, Flask and MongoDB in the technical stack.
+The app is currently hosted at [foodtruck.jiehou.net](http://foodtruck.jiehou.net)
+
+This app is basically a single page application using frontend rendering and ajax only. We use Backbone.js, Flask and MongoDB in the technical stack. So it's a full-stack product.
 
 Data Preparation
 ----------------
@@ -17,6 +19,7 @@ We use MongoDB for storing the data. We choose MongoDB because:
 
 * We are not storing relational data, and we don't need a relational schema for supporting joints and aggregation
 * MongoDB provides a good indexing system which allows us to query text and geospatial coordinates efficiently
+* We didn't choose MySQL or PostgreSQL because we don't need table joins or complex queries
 
 One interesting part is how MongoDB keep the geospatial index. Essentially it uses a multikey index called "2dsphere" which indexes locations based on their coordinates. Internally it uses B tree to support `O(logn)` speed for doing range query, which is what we use to query locations around a specific coordinate.
 
@@ -24,7 +27,13 @@ We have a collection in MongoDB called "SFFoodTruck". Each doc in this collectio
 
 Backend Design
 --------------
-The back end is created using Flask framework, with only three APIs exposed:
+We use Flask for our backend service. We choose Flask becuase:
+
+* It's lightweight!
+* In this app, we will only need to expose very simple APIs. There's not so much rendering happening in our backend because our frontend handling most of the DOM rendering. So we can focus on providing good APIs for our front to use
+* We didn't choose Django because it's too heavy weight and we don't actually need the complex backend rendering and logic inside it
+
+The backend provides with only three APIs exposed:
 
 GET `/`
 
@@ -44,7 +53,13 @@ The server is really lightweight and contains a single file `server.py`.
 
 Frontend Design
 ---------------
-We use Backbone.js for modeling or truck data and all views. We extensively use Google Maps APIs to visualize the trucks on the map. The main logic is included inside `app.js`
+We use Backbone.js for modeling or truck data and all views becuase:
+
+* We don't want to store the data in DOM and we don't want to doing extensive DOM manipulations in the frontend because it's hard to scale our project and painful to write.
+* We want to provide good interactive UI where the frontend handling the view changes as the user operates
+* We didn't chosse Angular or Ember because it's still a simple app. At this scale, Backbone is good enough to handle the event binding manually where as Angular or Ember is sort of overkilling.
+
+We extensively use Google Maps APIs to visualize the trucks on the map. The main logic is included inside `app.js`
 
 ### Models ###
 At the initial page load, we load and store all the trucks' information in a collection of `App.Truck` model. We also model the query in `App.Query` and query result in `App.QueryResultItem` and `App.QueryResultList` so we can use object-oriented way for interacting with the model.
