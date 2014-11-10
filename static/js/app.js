@@ -13,7 +13,7 @@ App.Query = Backbone.Model.extend({
     // The search range is currently fixed, which is not ideal.
     // In future we should dynamically set this based on how many result we can get,
     // because we don't want to show too many or too few results to the user.
-    maxDistance: 600,
+    maxDistance: 600, // in meters
 
     toQueryString: function() {
         var str = "?lat=" + this.get('lat') + "&lng=" + this.get('lng') + "&maxDistance=" + this.maxDistance;
