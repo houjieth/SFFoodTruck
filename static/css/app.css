@@ -85,3 +85,9 @@ button {
     border-top-left-radius: 0;
     border-top-right-radius: 0;
 }
+
+#helper-links {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+}

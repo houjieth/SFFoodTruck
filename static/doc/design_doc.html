@@ -1,0 +1,251 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<style>
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote {
+    margin: 0;
+    padding: 0;
+}
+body {
+    font-family: "Helvetica Neue", Helvetica, "Hiragino Sans GB", Arial, sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    color: #737373;
+    background-color: white;
+    margin: 10px 13px 10px 13px;
+}
+table {
+	margin: 10px 0 15px 0;
+	border-collapse: collapse;
+}
+td,th {	
+	border: 1px solid #ddd;
+	padding: 3px 10px;
+}
+th {
+	padding: 5px 10px;	
+}
+
+a {
+    color: #0069d6;
+}
+a:hover {
+    color: #0050a3;
+    text-decoration: none;
+}
+a img {
+    border: none;
+}
+p {
+    margin-bottom: 9px;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: #404040;
+    line-height: 36px;
+}
+h1 {
+    margin-bottom: 18px;
+    font-size: 30px;
+}
+h2 {
+    font-size: 24px;
+}
+h3 {
+    font-size: 18px;
+}
+h4 {
+    font-size: 16px;
+}
+h5 {
+    font-size: 14px;
+}
+h6 {
+    font-size: 13px;
+}
+hr {
+    margin: 0 0 19px;
+    border: 0;
+    border-bottom: 1px solid #ccc;
+}
+blockquote {
+    padding: 13px 13px 21px 15px;
+    margin-bottom: 18px;
+    font-family:georgia,serif;
+    font-style: italic;
+}
+blockquote:before {
+    content:"\201C";
+    font-size:40px;
+    margin-left:-10px;
+    font-family:georgia,serif;
+    color:#eee;
+}
+blockquote p {
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 18px;
+    margin-bottom: 0;
+    font-style: italic;
+}
+code, pre {
+    font-family: Monaco, Andale Mono, Courier New, monospace;
+}
+code {
+    background-color: #fee9cc;
+    color: rgba(0, 0, 0, 0.75);
+    padding: 1px 3px;
+    font-size: 12px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+}
+pre {
+    display: block;
+    padding: 14px;
+    margin: 0 0 18px;
+    line-height: 16px;
+    font-size: 11px;
+    border: 1px solid #d9d9d9;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+pre code {
+    background-color: #fff;
+    color:#737373;
+    font-size: 11px;
+    padding: 0;
+}
+sup {
+    font-size: 0.83em;
+    vertical-align: super;
+    line-height: 0;
+}
+* {
+	-webkit-print-color-adjust: exact;
+}
+@media screen and (min-width: 914px) {
+    body {
+        width: 854px;
+        margin:10px auto;
+    }
+}
+@media print {
+	body,code,pre code,h1,h2,h3,h4,h5,h6 {
+		color: black;
+	}
+	table, pre {
+		page-break-inside: avoid;
+	}
+}
+</style>
+<title>Models</title>
+
+</head>
+<body>
+<h1>San Francisco Food Truck Finder</h1>
+
+<p>This web app let you find food trucks around a specific location in San Francisco. You can also specify the food type keywords in your search. The app is currently hosted at <a href="http://foodtruck.jiehou.net">foodtruck.jiehou.net</a></p>
+
+<p>This app is basically a single page application using frontend rendering and ajax only. We use Backbone.js, Flask and MongoDB in the technical stack.</p>
+
+<h2>Data Preparation</h2>
+
+<p>All the food truck data comes from <a href="https://data.sfgov.org/Economy-and-Community/Mobile-Food-Facility-Permit/rqzj-sfat?">here</a>. We export the data to a XML document, then we use <code>parse_original_data_xml.py</code> to read the xml, getting the fields we feel interested in, and then write to a new JSON text file (<code>food_truck_data.json</code>).</p>
+
+<p>We notice that some of the original food truck data miss the coordinates, but has street address. During the above process we use Google's geocoding API to translate the street address into coordinates. In the end, all food trucks have specific latitude and longitute.</p>
+
+<h2>Data Storage</h2>
+
+<p>We use MongoDB for storing the data. We choose MongoDB because:</p>
+
+<ul>
+<li>We are not storing relational data, and we don't need a relational schema for supporting joints and aggregation</li>
+<li>MongoDB provides a good indexing system which allows us to query text and geospatial coordinates efficiently</li>
+</ul>
+
+
+<p>One interesting part is how MongoDB keep the geospatial index. Essentially it uses a multikey index called "2dsphere" which indexes locations based on their coordinates. Internally it uses B tree to support <code>O(logn)</code> speed for doing range query, which is what we use to query locations around a specific coordinate.</p>
+
+<p>We have a collection in MongoDB called "SFFoodTruck". Each doc in this collection is a json representing the name, address, coordinates, location id and food types of a truck. Trucks are indexed by text in food items and coordinates, with two separate indexes.</p>
+
+<h2>Backend Design</h2>
+
+<p>The back end is created using Flask framework, with only three APIs exposed:</p>
+
+<p>GET <code>/</code></p>
+
+<ul>
+<li>Render the index.html</li>
+</ul>
+
+
+<p>GET <code>/api/v1/trucks</code></p>
+
+<ul>
+<li>Get a list of all information about all trucks</li>
+</ul>
+
+
+<p>GET <code>/api/v1/trucks/nearby</code></p>
+
+<ul>
+<li>Query nearby trucks based on the location, max distance and food item keyword</li>
+</ul>
+
+
+<p>What Flask does is mostly querying MongoDB and result the query result. When we need to query both food item text and coordinates, we will do the interesections in memory, instead of doing it using complex MongoDB queries.</p>
+
+<p>The server is really lightweight and contains a single file <code>server.py</code>.</p>
+
+<h2>Frontend Design</h2>
+
+<p>We use Backbone.js for modeling or truck data and all views. We extensively use Google Maps APIs to visualize the trucks on the map. The main logic is included inside <code>app.js</code></p>
+
+<h3>Models</h3>
+
+<p>At the initial page load, we load and store all the trucks' information in a collection of <code>App.Truck</code> model. We also model the query in <code>App.Query</code> and query result in <code>App.QueryResultItem</code> and <code>App.QueryResultList</code> so we can use object-oriented way for interacting with the model.</p>
+
+<h3>Views</h3>
+
+<p>All the query result, and info popup window are representated with Backbone views. For easier integration with Google Maps Javascript API, we use a <a href="https://github.com/eschwartz/backbone.googlemaps">open source library</a> which servers as adapter betwee our Backbone view object and Google Maps Javascript object.</p>
+
+<h3>Connecting Models and Views</h3>
+
+<p>We have all the truck info in memory, but we need to decide when to show which views depend on the user query. So we keep a <code>markerMap</code>, which maps a truck model to its views including markers and info window. When the query changes, we change the mapping accordingly so the user can see the screen updates.</p>
+
+<h3>Optimization for Browsing</h3>
+
+<p>The user can not only make queries, but also browsing the maps to view available trucks. Since there are too many trucks, we cannot show all the markers on screen (this will pollute the map). We use Google's <a href="http://google-maps-utility-library-v3.googlecode.com/svn/tags/markermanager/1.0/docs/reference.html">MarkerManager</a> to help us doing optimizations. Basically we randomly choose different amount of trucks to show on the screen depends on the current zoom level.</p>
+
+<h3>UI Polishing</h3>
+
+<p>We use Bootstrap and css animation for making the UI prettier. We keep a simplistic design so the user interface is clean and intuitive.</p>
+
+<h2>Acknowledgement</h2>
+
+<p>Opensoure libraries used for this project:</p>
+
+<ul>
+<li><a href="https://github.com/eschwartz/backbone.googlemaps">backbone.googlemaps</a></li>
+<li><a href="http://getbootstrap.com/">Bootstrap</a></li>
+<li><a href="http://www.justinaguilar.com/animations/index.html">CSS Animation Cheetsheet</a></li>
+</ul>
+
+
+<p><em>Copyright 2014. Jie Hou. All the sources for this project is fully free for use for any purposes.</em></p>
+</body>
+</html>
