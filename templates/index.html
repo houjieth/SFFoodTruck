@@ -1,6 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
+<title>SF Food Truck Finder</title>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <title>Backbone.GoogleMaps | Example</title>
@@ -19,22 +20,23 @@
     <link rel="stylesheet" type="text/css" href="/static/css/lib/bootstrap.css">
     <link rel="stylesheet" href="/static/css/lib/annimation.css">
     <link rel="stylesheet" type="text/css" href="/static/css/app.css">
+    <link rel="shortcut icon" href="/static/images/favicon.ico">
 </head>
 
 <body>
 
 <script id="info-window-template" type="text/template">
     <div><b><%=name %></b></div>
-    <div><b>Address:</b> <%=address %></div>
-    <div><b>Food items:</b> <%=food_items_str %></div>
+    <p class="address"><%=address %></p>
+    <p class="food-item"><%=food_items_str %></p>
 </script>
 
 
 <script id="search-result-template" type="text/template">
     <a href="#" class="list-group-item" id="search-result-<%=location_id%>">
-        <h4 class="list-group-item-heading"><%=name %></h4></div>
-        <p class="list-group-item-text"><%=address %></p>
-        <p class="list-group-item-text"><b>Food items:</b> <%=food_items_str %></p>
+        <div><h4 class="list-group-item-heading"><%=name %></h4></div>
+        <p class="list-group-item-text address"><%=address %></p>
+        <p class="list-group-item-text food-item"><%=food_items_str %></p>
     </a>
 </script>
 

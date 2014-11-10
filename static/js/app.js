@@ -10,7 +10,7 @@ App.TruckCollection = Backbone.GoogleMaps.LocationCollection.extend({
 });
 
 App.Query = Backbone.Model.extend({
-    maxDistance: 1000, // TODO: make this dynamic!
+    maxDistance: 600, // TODO: make this dynamic!
     toQueryString: function() {
         var str = "?lat=" + this.get('lat') + "&lng=" + this.get('lng') + "&maxDistance=" + this.maxDistance;
         if (this.get('keyword'))
@@ -55,7 +55,7 @@ App.QueryResultList = Backbone.Collection.extend({
                         that.displayQueryMarker();
                         that.updateResultListView();
                         App.map.setCenter(that.loc);
-                        App.map.setZoom(16);
+                        App.map.setZoom(17);
                     }
                 });
             } else {

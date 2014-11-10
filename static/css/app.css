@@ -53,6 +53,14 @@ body {
     cursor: pointer;
 }
 
+.address {
+    color: gray;
+}
+
+.food-item {
+    font-style: italic;
+}
+
 #listing li:hover {
     background: #006;
     color: #fff;
