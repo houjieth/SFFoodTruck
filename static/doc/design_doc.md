@@ -78,7 +78,7 @@ We use Bootstrap and css animation for making the UI prettier. We keep a simplis
 
 Testing
 -------
-We have end to end test for testing our basica search features including happy and error cases.
+We have end to end test for testing our basic search features including happy and error cases.
 
 We use [Selenium Webdriver](http://www.seleniumhq.org) as our test driver. The test is written in python in `test/search_test.py` using python SDKs for Selenium. We simulate the user typing the url, typing search words and firing queries. We check the DOM to verify our website is giving sane output.
 
