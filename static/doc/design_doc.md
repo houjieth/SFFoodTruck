@@ -3,7 +3,7 @@ San Francisco Food Truck Finder
 
 This web app let you find food trucks around a specific location in San Francisco. You can also specify the food type keywords in your search. 
 
-The app is currently hosted at [foodtruck.jiehou.net](http://foodtruck.jiehou.net)
+The app is currently hosted at [foodtruck.jiehou.net](http://foodtruck.jiehou.net). And the source code is also available at [github](https://github.com/houjieth/SFFoodTruck).
 
 This app is basically a single page application using frontend rendering and ajax only. We use Backbone.js, Flask and MongoDB in the technical stack. So it's a full-stack product.
 
