@@ -2,3 +2,4 @@ flask==0.10.1
 pygeocoder==1.2.5
 pymongo==2.7.2
 werkzeug==0.9.6
+selenium=2.44.0
