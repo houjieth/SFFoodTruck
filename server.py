@@ -34,17 +34,27 @@ def nearby_trucks_list():
     maxDistance = float(request.args.get('maxDistance'))
     lng = float(request.args.get('lng'))
     lat = float(request.args.get('lat'))
-    trucks = []
-    cursor = collection.find({'loc':
-                                  {'$near':
-                                       {'$geometry':
-                                            {'type': 'Point',
-                                             'coordinates': [lng, lat]},
-                                        '$maxDistance': maxDistance
-                                       }}})
+    keyword = request.args.get('keyword')
+    truck_ids = []
+    cursor = collection.find({'loc': {'$near':
+                                          {'$geometry':
+                                               {'type': 'Point',
+                                                'coordinates': [lng, lat]},
+                                           '$maxDistance': maxDistance
+                                          }}})
     for truck in cursor:
+        truck_ids.append(truck['location_id'])
+    if keyword is not None:
+        cursor = collection.find({'$text': {'$search': keyword}})
+        truck_ids_2 = []
+        for truck in cursor:
+            truck_ids_2.append(truck['location_id'])
+        truck_ids = list(set(truck_ids).intersection(set(truck_ids_2)))
+
+    trucks = []
+    for id in truck_ids:
         trucks.append({
-            'location_id': truck['location_id']
+            'location_id': id
         })
     return json.dumps(trucks)
 

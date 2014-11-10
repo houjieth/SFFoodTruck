@@ -10,9 +10,12 @@ App.TruckCollection = Backbone.GoogleMaps.LocationCollection.extend({
 });
 
 App.Query = Backbone.Model.extend({
-    maxDistance: 400, // TODO: make this dynamic!
+    maxDistance: 1000, // TODO: make this dynamic!
     toQueryString: function() {
-        return "?lat=" + this.get('lat') + "&lng=" + this.get('lng') + "&maxDistance=" + this.maxDistance;
+        var str = "?lat=" + this.get('lat') + "&lng=" + this.get('lng') + "&maxDistance=" + this.maxDistance;
+        if (this.get('keyword'))
+            str += "&keyword=" + this.get('keyword');
+        return str;
     }
 });
 
@@ -22,12 +25,17 @@ App.QueryResultList = Backbone.Collection.extend({
     urlBase: '/api/v1/trucks/nearby',
     model: App.QueryResultItem,
     addressSuffix: " San Francisco, CA",
+    resultArea: '#search-result-area',
 
     initialize: function() {
         this.geocoder = new google.maps.Geocoder();
     },
 
-    queryWithAddress: function(address) {
+    makeQuery: function(address, keyword) {
+        if (!address) {
+            alert("Please input an address");
+            return;
+        }
         address += this.addressSuffix;
         var that = this;
         this.geocoder.geocode( {'address': address}, function(results, status) {
@@ -37,7 +45,8 @@ App.QueryResultList = Backbone.Collection.extend({
                 var lng = that.loc.lng();
                 var query = new App.Query({
                     lat: lat,
-                    lng: lng
+                    lng: lng,
+                    keyword: keyword
                 });
                 that.url = that.urlBase + query.toQueryString();
                 that.fetch({
@@ -46,7 +55,7 @@ App.QueryResultList = Backbone.Collection.extend({
                         that.displayQueryMarker();
                         that.updateResultListView();
                         App.map.setCenter(that.loc);
-                        App.map.setZoom(17); // TODO: make this dynamic
+                        App.map.setZoom(16);
                     }
                 });
             } else {
@@ -76,9 +85,12 @@ App.QueryResultList = Backbone.Collection.extend({
 
     updateResultListView: function() {
         var resultListView = new App.QueryResultListView({
-            el: $('#search-result-area')
+            el: $(this.resultArea)
         });
         resultListView.render();
+        var resultArea = $(this.resultArea);
+        resultArea.css('visibility', 'visible');
+        resultArea.addClass('pullDown');
     }
 });
 
@@ -98,19 +110,19 @@ App.InfoWindow = Backbone.View.extend({
     }
 });
 
-
-
 App.SearchControlView = Backbone.View.extend({
     events: {
-        'change #address-input': 'startSearchWithAddress'
+        'change input': 'startSearch'
     },
+    addressInputTag: '#address-input',
+    keywordInputTag: '#keyword-input',
 
-    startSearchWithAddress: function(e) {
-        var address = $(e.currentTarget).val();
-        App.queryResult.queryWithAddress(address);
+    startSearch: function(e) {
+        var address = this.$el.find(this.addressInputTag).val();
+        var keyword = this.$el.find(this.keywordInputTag).val();
+        App.queryResult.makeQuery(address, keyword);
     }
 });
-
 
 App.QueryResultItemView = Backbone.View.extend({
     template: '#search-result-template',
@@ -137,11 +149,27 @@ App.QueryResultItemView = Backbone.View.extend({
     }
 });
 
+App.QueryResultEmptyItemView = Backbone.View.extend({
+    template: '#search-result-empty-template',
+
+    render: function() {
+        var template = _.template($(this.template).html());
+        this.$el.html(template());
+        return this;
+    }
+});
+
 App.QueryResultListView = Backbone.View.extend({
 
     render: function() {
         var resultArea = this.$el.find('div');
         resultArea.html("");
+        if (App.queryResult.length == 0) {
+            var emptyResultView = new App.QueryResultEmptyItemView({
+                el: resultArea
+            });
+            emptyResultView.render();
+        }
         for (var i = 0; i < App.queryResult.size(); i++) {
             var locationId = App.queryResult.at(i).get('location_id');
             var truck = App.trucks.findWhere({

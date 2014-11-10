@@ -17,6 +17,7 @@
     <script type="text/javascript" src="/static/js/lib/bootstrap.js"></script>
     <script type="text/javascript" src="/static/js/app.js"></script>
     <link rel="stylesheet" type="text/css" href="/static/css/lib/bootstrap.css">
+    <link rel="stylesheet" href="/static/css/lib/annimation.css">
     <link rel="stylesheet" type="text/css" href="/static/css/app.css">
 </head>
 
@@ -37,10 +38,18 @@
     </a>
 </script>
 
-<div id="search-area" class="overlay">
-    <input type="text" name="query" id="address-input" class="form-control" value="13rd and folsom" placeholder="Address (e.g. 3rd and folsom)"/>
+<script id="search-result-empty-template" type="text/template">
+    <a href="#" class="list-group-item">
+        <h4 class="list-group-item-heading">No result found</h4>
+    </a>
+</script>
+
+<div id="search-area" class="overlay panel panel-default">
+    <div class="panel-heading">Search neary food truck:</div>
+    <input type="text" name="query" id="address-input" class="panel-body" value="" placeholder="Type address (e.g. 3rd and folsom)"/>
+    <input type="text" name="query" id="keyword-input" class="panel-body" value="" placeholder="(Optional) Type food types (e.g. burger)"/>
 </div>
-<div id="search-result-area" class="overlay">
+<div id="search-result-area" class="overlay well">
     <div class="list-group"></div>
 </div>
 

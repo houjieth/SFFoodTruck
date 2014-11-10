@@ -24,14 +24,21 @@ body {
     right: 40px;
     top: 40px;
     width: 350px;
+    padding: 0px;
+}
+
+#search-area .panel-heading{
+    font-weight: bold;
 }
 
 #search-result-area {
     right: 40px;
-    top: 140px;
+    top: 205px;
     width: 350px;
     height: 500px;
     overflow: scroll;
+    padding: 0px;
+    visibility: hidden;
 }
 
 #listing {
@@ -59,4 +66,14 @@ button {
     font-size: 14px;
     padding: 10px 15px;
     outline: none;
+}
+
+#address-input {
+    width: 100%;
+}
+
+#keyword-input {
+    width: 100%;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
 }

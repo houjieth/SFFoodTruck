@@ -40,8 +40,6 @@ for row in root.find('row'):
             lng = geo_location[1]
         # collect descriptive keywords for later indexing in DB
         food_items_str = row.find('fooditems').text
-        food_items_words = filter(None, re.split(":| |&|(|)", row.find('fooditems').text))
-        food_items = [x.lower() for x in food_items_words]
 
         if address and lat:
             truck = {
@@ -57,7 +55,6 @@ for row in root.find('row'):
                 },
                 'lat': float(lat),
                 'lng': float(lng),
-                'food_items': food_items,
                 'food_items_str': food_items_str
             }
             trucks.append(truck)

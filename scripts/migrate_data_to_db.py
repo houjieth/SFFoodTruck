@@ -19,4 +19,5 @@ trucks_json = input_file.read()
 trucks = json.loads(trucks_json)
 
 collection.insert(trucks)
+collection.ensure_index([('food_items_str', 'text')])
 collection.ensure_index([('loc', '2dsphere')])
