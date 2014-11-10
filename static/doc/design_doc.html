@@ -235,6 +235,89 @@ sup {
 
 <p>We use Bootstrap and css animation for making the UI prettier. We keep a simplistic design so the user interface is clean and intuitive.</p>
 
+<h2>Testing</h2>
+
+<p>We have end to end test for testing our basica search features including happy and error cases.</p>
+
+<p>We use <a href="http://www.seleniumhq.org">Selenium Webdriver</a> as our test driver. The test is written in python in <code>test/search_test.py</code> using python SDKs for Selenium. We simulate the user typing the url, typing search words and firing queries. We check the DOM to verify our website is giving sane output.</p>
+
+<p>This repo contains files for SF Food Truck Finder app.</p>
+
+<h2>How to Run</h2>
+
+<p>First, install dependencies</p>
+
+<pre><code>(In your virtualenv)
+$ pip install -r requirements.txt
+</code></pre>
+
+<p>Start the Flask server (You may want to first modify the port number in <code>server.py</code> before run it)</p>
+
+<pre><code>$ python server.py
+</code></pre>
+
+<p>Open your browser and hit <code>localhost:[PORT_NUMBER]</code>, there you go!</p>
+
+<h2>How to Run Test</h2>
+
+<p>Download and install Selenium Driver from <a href="http://www.seleniumhq.org/">http://www.seleniumhq.org/</a>. The start the driver:</p>
+
+<pre><code>$ java -jar ava -jar selenium-server-standalone-[VERSION_NUMBER].jar
+</code></pre>
+
+<p>Then we can run the integration test using:</p>
+
+<pre><code>$ python test/search_test.py
+</code></pre>
+
+<p>Remember that by default you need to have Firefox installed since it's the default testing browser Selenium uses.</p>
+
+<h2>File Structures</h2>
+
+<pre><code>.
+├── README.md
+├── requirements.txt
+├── scripts                               // scripts for processing raw data
+│   ├── __init__.py
+│   ├── food_truck_data.json
+│   ├── food_truck_original_data.json
+│   ├── food_truck_original_data.xml
+│   ├── migrate_data_to_db.py
+│   └── parse_original_data_xml.py
+├── server.py
+├── static
+│   ├── css
+│   │   ├── app.css                       // main css
+│   │   └── lib
+│   │       ├── animation.css
+│   │       ├── bootstrap.css
+│   │       └── bootstrap.css.map
+│   ├── doc
+│   │   ├── design_doc.html
+│   │   └── design_doc.md
+│   ├── images
+│   │   ├── favicon.ico
+│   │   ├── truck.png
+│   │   └── truck_small.png
+│   └── js
+│       ├── app.js                        // main js
+│       └── lib
+│           ├── backbone.googlemaps.js
+│           ├── backbone.js
+│           ├── bootstrap.js
+│           ├── jquery-2.0.3.js
+│           ├── markermanager.js
+│           └── underscore.js
+├── templates
+│   └── index.html                        // main website page
+└── test                              // integration tests
+    └── search_test.py
+</code></pre>
+
+<h2>Known Issue</h2>
+
+<p>The initial page load needs to load about 200KB data as well as Google Maps data. It might take a few seconds. If it fails to load, refresh it. The later page load will be much faster since most maps data will be cached.</p>
+
 <h2>Acknowledgement</h2>
 
 <p>Opensoure libraries used for this project:</p>
@@ -246,6 +329,6 @@ sup {
 </ul>
 
 
-<p><em>Copyright 2014. Jie Hou. All the sources for this project is fully free for use for any purposes.</em></p>
+<p><em>Copyright 2014 Jie Hou. All the sources for this project is fully free for use for any purposes.</em></p>
 </body>
 </html>

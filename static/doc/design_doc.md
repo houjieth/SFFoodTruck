@@ -61,6 +61,84 @@ The user can not only make queries, but also browsing the maps to view available
 ### UI Polishing ###
 We use Bootstrap and css animation for making the UI prettier. We keep a simplistic design so the user interface is clean and intuitive.
 
+Testing
+-------
+We have end to end test for testing our basica search features including happy and error cases.
+
+We use [Selenium Webdriver](http://www.seleniumhq.org) as our test driver. The test is written in python in `test/search_test.py` using python SDKs for Selenium. We simulate the user typing the url, typing search words and firing queries. We check the DOM to verify our website is giving sane output.
+
+This repo contains files for SF Food Truck Finder app.
+
+How to Run
+----------
+First, install dependencies
+
+    (In your virtualenv)
+    $ pip install -r requirements.txt
+	
+Start the Flask server (You may want to first modify the port number in `server.py` before run it)
+
+	$ python server.py
+	
+Open your browser and hit `localhost:[PORT_NUMBER]`, there you go!
+
+How to Run Test
+---------------
+Download and install Selenium Driver from [http://www.seleniumhq.org/](http://www.seleniumhq.org/). The start the driver:
+
+	$ java -jar ava -jar selenium-server-standalone-[VERSION_NUMBER].jar
+	
+Then we can run the integration test using:
+
+	$ python test/search_test.py
+	
+Remember that by default you need to have Firefox installed since it's the default testing browser Selenium uses.
+
+File Structures
+---------------
+	.
+	├── README.md
+	├── requirements.txt
+	├── scripts								// scripts for processing raw data
+	│   ├── __init__.py
+	│   ├── food_truck_data.json
+	│   ├── food_truck_original_data.json
+	│   ├── food_truck_original_data.xml
+	│   ├── migrate_data_to_db.py
+	│   └── parse_original_data_xml.py
+	├── server.py
+	├── static
+	│   ├── css
+	│   │   ├── app.css						// main css
+	│   │   └── lib
+	│   │       ├── animation.css
+	│   │       ├── bootstrap.css
+	│   │       └── bootstrap.css.map
+	│   ├── doc
+	│   │   ├── design_doc.html
+	│   │   └── design_doc.md
+	│   ├── images
+	│   │   ├── favicon.ico
+	│   │   ├── truck.png
+	│   │   └── truck_small.png
+	│   └── js
+	│       ├── app.js						// main js
+	│       └── lib
+	│           ├── backbone.googlemaps.js
+	│           ├── backbone.js
+	│           ├── bootstrap.js
+	│           ├── jquery-2.0.3.js
+	│           ├── markermanager.js
+	│           └── underscore.js
+	├── templates
+	│   └── index.html						// main website page
+	└── test								// integration tests
+	    └── search_test.py
+	  
+Known Issue
+-----------
+The initial page load needs to load about 200KB data as well as Google Maps data. It might take a few seconds. If it fails to load, refresh it. The later page load will be much faster since most maps data will be cached.
+
 Acknowledgement
 ---------------
 Opensoure libraries used for this project:
@@ -70,4 +148,4 @@ Opensoure libraries used for this project:
 * [CSS Animation Cheetsheet](http://www.justinaguilar.com/animations/index.html)
 
 
-*Copyright 2014. Jie Hou. All the sources for this project is fully free for use for any purposes.*
+*Copyright 2014 Jie Hou. All the sources for this project is fully free for use for any purposes.*
