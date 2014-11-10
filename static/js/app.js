@@ -10,7 +10,11 @@ App.TruckCollection = Backbone.GoogleMaps.LocationCollection.extend({
 });
 
 App.Query = Backbone.Model.extend({
-    maxDistance: 600, // TODO: make this dynamic!
+    // The search range is currently fixed, which is not ideal.
+    // In future we should dynamically set this based on how many result we can get,
+    // because we don't want to show too many or too few results to the user.
+    maxDistance: 600,
+
     toQueryString: function() {
         var str = "?lat=" + this.get('lat') + "&lng=" + this.get('lng') + "&maxDistance=" + this.maxDistance;
         if (this.get('keyword'))
@@ -24,7 +28,7 @@ App.QueryResultItem = Backbone.Model.extend();
 App.QueryResultList = Backbone.Collection.extend({
     urlBase: '/api/v1/trucks/nearby',
     model: App.QueryResultItem,
-    addressSuffix: " San Francisco, CA",
+    addressSuffix: " San Francisco, CA", // we only search in SF
     resultArea: '#search-result-area',
 
     initialize: function() {
@@ -38,6 +42,10 @@ App.QueryResultList = Backbone.Collection.extend({
         }
         address += this.addressSuffix;
         var that = this;
+
+        // To make an query, we will first use Google's geocoding API to translate
+        // street address into coordinates. Then we call our backend API to get a
+        // list of locationIds for food trucks.
         this.geocoder.geocode( {'address': address}, function(results, status) {
             if (status == google.maps.GeocoderStatus.OK) {
                 that.loc = results[0].geometry.location;
@@ -54,8 +62,8 @@ App.QueryResultList = Backbone.Collection.extend({
                         that.updateMarkers();
                         that.displayQueryMarker();
                         that.updateResultListView();
-                        App.map.setCenter(that.loc);
-                        App.map.setZoom(17);
+                        App.map.setCenter(that.loc); // center screen to the typed address
+                        App.map.setZoom(17); // zoom close enough to the typed address
                     }
                 });
             } else {
@@ -64,6 +72,7 @@ App.QueryResultList = Backbone.Collection.extend({
         });
     },
 
+    // Display a big marker in the center of screen to indicate the typed address
     displayQueryMarker: function() {
         App.markerManager.addMarker(
             new google.maps.Marker({
@@ -71,9 +80,10 @@ App.QueryResultList = Backbone.Collection.extend({
                 title: 'Query Marker',
                 animation: google.maps.Animation.DROP
             })
-            , 13);
+            , 13); // minimum zoom level
     },
 
+    // Render the marker on the screen based on the result food truck list
     updateMarkers: function() {
         App.markerManager.clearMarkers();
         for(var i = 0; i < App.queryResult.size(); i++) {
@@ -83,12 +93,14 @@ App.QueryResultList = Backbone.Collection.extend({
         }
     },
 
+    // update result list in the right side of screen
     updateResultListView: function() {
         var resultListView = new App.QueryResultListView({
             el: $(this.resultArea)
         });
         resultListView.render();
         var resultArea = $(this.resultArea);
+        // add pull down animation for the search result
         resultArea.css('visibility', 'visible');
         resultArea.addClass('pullDown');
     }
@@ -97,6 +109,7 @@ App.QueryResultList = Backbone.Collection.extend({
 
 /* ---------------------- Views ---------------------- */
 
+// View for the popup after clicking the marker
 App.InfoWindow = Backbone.View.extend({
     template: '#info-window-template',
     render: function() {
@@ -110,6 +123,7 @@ App.InfoWindow = Backbone.View.extend({
     }
 });
 
+// View for typing the search address and food keyword
 App.SearchControlView = Backbone.View.extend({
     events: {
         'change input': 'startSearch'
@@ -124,6 +138,7 @@ App.SearchControlView = Backbone.View.extend({
     }
 });
 
+// View for showing a single search result
 App.QueryResultItemView = Backbone.View.extend({
     template: '#search-result-template',
 
@@ -149,6 +164,7 @@ App.QueryResultItemView = Backbone.View.extend({
     }
 });
 
+// View for showing when there's no result found
 App.QueryResultEmptyItemView = Backbone.View.extend({
     template: '#search-result-empty-template',
 
@@ -159,6 +175,7 @@ App.QueryResultEmptyItemView = Backbone.View.extend({
     }
 });
 
+// View for showing a list of search results
 App.QueryResultListView = Backbone.View.extend({
 
     render: function() {
@@ -191,7 +208,7 @@ App.QueryResultListView = Backbone.View.extend({
 
 App.createMap = function () {
     var mapOptions = {
-        center: new google.maps.LatLng(37.77, -122.4167),
+        center: new google.maps.LatLng(37.77, -122.4167), // locate to the center of SF
         zoom: 13,
         mapTypeId: google.maps.MapTypeId.ROADMAP
     };
@@ -201,6 +218,11 @@ App.createMap = function () {
 
 };
 
+// We only load the truck data once (during the first page load). These truck data are
+// stored by App.Truck models. For display, we will render markers for some trucks on
+// the screen. So we use a markerMap which tells "should we display marker for this truck
+// or not". The markerMap will be updated regularly when search result changes, but no more
+// truck data load is needed.
 App.createMarkerMap = function(trucks) {
     this.markerMap = {};
     for (var i = 0; i < trucks.size(); i++) {
@@ -215,6 +237,8 @@ App.createMarkerMap = function(trucks) {
         var infoWindow = new google.maps.InfoWindow({
             content: new App.InfoWindow({ model: truck }).render().el
         });
+        // Bind the click event to the marker. After clicking a marker,
+        // a info window will popup showing the details
         google.maps.event.addListener(marker, 'click',
             function(marker, infoWindow) {
                 return function() {
@@ -229,10 +253,17 @@ App.createMarkerMap = function(trucks) {
     }
 };
 
+// We need to be smart to make a great browsing (not searching) experience for user.
+// There are too many trucks to be shown at the same time on the screen, we need
+// to show only some of the trucks to not make the map look too messy. And, this will
+// also save cpu and memory resource of the client's browser. So we use Google's
+// MarkerManger to pre-set the number of markers on the screen depends on different
+// zoom levels.
 App.setupMarkers = function() {
     this.markerManager = new MarkerManager(this.map);
     var that = this;
     google.maps.event.addListener(this.markerManager, 'loaded', function () {
+        // show different number of markers for different zoom level
         that.markerManager.addMarkers(that.getMarkers(2), 12);
         that.markerManager.addMarkers(that.getMarkers(45), 13);
         that.markerManager.addMarkers(that.getMarkers(90), 14);
@@ -243,13 +274,13 @@ App.setupMarkers = function() {
     });
 };
 
+// randomly get n markers
 App.getMarkers = function(n) {
     var batch = [];
     maxSize = Object.keys(this.markerMap).length;
     n = n <= maxSize ? n : maxSize;
     var locationIds = this.getRandomK(Object.keys(this.markerMap), n);
     for (var i = 0; i < n; i++) {
-        //var tmpIcon = getWeatherIcon();
         batch.push(this.markerMap[locationIds[i]]);
     }
     return batch;
